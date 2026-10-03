@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1020">
+<title>Organized Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary2:#6366f1;--shadow:0 12px 35px rgba(15,23,42,.08);--radius:18px}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.sidebar{background:#0b1020;color:#fff;padding:24px 18px;display:flex;flex-direction:column;gap:24px}
+.brand{font-size:21px;font-weight:800;display:flex;gap:10px;align-items:center}.brand span{background:#6366f1;padding:7px 9px;border-radius:11px}
+.side-btn{width:100%;padding:12px 14px;border-radius:12px;background:#171d31;color:#dbe2f0;text-align:left;margin-bottom:8px}
+.side-btn:hover,.side-btn.active{background:#242c48;color:#fff}
+.mini-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7e8aa7;margin:15px 8px 8px}
+.cat{display:flex;align-items:center;gap:9px;padding:8px;color:#b9c2d8;font-size:14px}.dot{width:9px;height:9px;border-radius:50%}
+.sidebar-bottom{margin-top:auto;color:#7e8aa7;font-size:12px;line-height:1.5}
+.main{min-width:0}.topbar{height:82px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 28px;position:sticky;top:0;z-index:5}
+.topbar h1{font-size:22px;margin:0 8px 0 0}.grow{flex:1}
+.btn{padding:10px 14px;border-radius:11px;background:#eef0f7;color:#273044;font-weight:600}.btn:hover{background:#e4e7f0}.btn.primary{background:var(--primary);color:#fff}.btn.primary:hover{background:#4338ca}
+.search{width:220px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;outline:none}.search:focus{border-color:var(--primary)}
+.content{padding:24px 28px}.calendar-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.calendar-head h2{margin:0;font-size:24px}.calendar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line)}.weekday{padding:12px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(7,1fr)}.day{min-height:130px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px;position:relative;background:#fff}.day:nth-child(7n){border-right:0}.day.muted{background:#fafafa;color:#a7afbf}.day.today{background:#f5f3ff}.num{font-size:13px;font-weight:700;width:27px;height:27px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:6px}.today .num{background:var(--primary);color:#fff}.event{font-size:11px;font-weight:600;color:#fff;padding:5px 7px;border-radius:7px;margin:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.event:hover{filter:brightness(.95)}
+.empty{text-align:center;color:var(--muted);padding:55px}
+.modal-bg{position:fixed;inset:0;background:rgba(8,12,25,.48);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}.modal-bg.show{display:flex}
+.modal{width:min(520px,100%);background:#fff;border-radius:20px;box-shadow:0 25px 70px rgba(0,0,0,.25);padding:22px}.modal h3{margin:0 0 18px}.field{margin:12px 0}.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;outline:none}.field textarea{min-height:80px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.delete{margin-right:auto;background:#fee2e2;color:#b91c1c}
+@media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{display:none}.topbar{padding:0 14px}.content{padding:14px}.search{display:none}.day{min-height:95px;padding:6px}.event{font-size:10px}.weekday{font-size:9px;padding:9px 2px}}
+@media(max-width:550px){.day{min-height:72px}.event{padding:3px}.calendar-head h2{font-size:19px}.btn{padding:8px 10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><span>✓</span> Organized</div>
+  <button class="side-btn primary" onclick="openAdd()">＋ New event</button>
+  <button class="side-btn active" onclick="setView('month')">▦ Month</button>
+  <button class="side-btn" onclick="jumpToday()">● Today</button>
+  <div class="mini-title">Categories</div>
+  <div class="cat"><i class="dot" style="background:#4f46e5"></i>School</div>
+  <div class="cat"><i class="dot" style="background:#10b981"></i>Personal</div>
+  <div class="cat"><i class="dot" style="background:#f59e0b"></i>Sports</div>
+  <div class="cat"><i class="dot" style="background:#ef4444"></i>Important</div>
+  <div class="sidebar-bottom">Your events are saved locally in this browser.<br><br>Tip: click any day to add an event.</div>
+</aside>
+<main class="main">
+<header class="topbar">
+  <h1>Calendar</h1><button class="btn" onclick="prevMonth()">‹</button><button class="btn" onclick="nextMonth()">›</button>
+  <div class="grow"></div><input id="search" class="search" placeholder="Search events…" oninput="render()">
+  <button class="btn" onclick="jumpToday()">Today</button><button class="btn primary" onclick="openAdd()">＋ Add event</button>
+</header>
+<section class="content">
+  <div class="calendar-head"><h2 id="monthTitle"></h2><div class="grow"></div></div>
+  <div class="calendar">
+    <div class="weekdays"><div class="weekday">Sun</div><div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div></div>
+    <div id="grid" class="grid"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<div id="modalBg" class="modal-bg">
+<div class="modal">
+  <h3 id="modalTitle">New event</h3>
+  <input id="editId" type="hidden">
+  <div class="field"><label>Event name</label><input id="name" placeholder="e.g. Hockey practice"></div>
+  <div class="row">
+    <div class="field"><label>Date</label><input id="date" type="date"></div>
+    <div class="field"><label>Time</label><input id="time" type="time"></div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Category</label><select id="category"><option value="school">School</option><option value="personal">Personal</option><option value="sports">Sports</option><option value="important">Important</option></select></div>
+    <div class="field"><label>Repeat</label><select id="repeat"><option value="none">Does not repeat</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+  </div>
+  <div class="field"><label>Notes</label><textarea id="notes" placeholder="Optional notes…"></textarea></div>
+  <div class="actions"><button id="deleteBtn" class="btn delete" onclick="removeEvent()" style="display:none">Delete</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveEvent()">Save event</button></div>
+</div>
+</div>
+
+<script>
+const colors={school:'#4f46e5',personal:'#10b981',sports:'#f59e0b',important:'#ef4444'};
+let current=new Date(); current.setDate(1);
+let events=JSON.parse(localStorage.getItem('organized_calendar_events')||'[]');
+
+function pad(n){return String(n).padStart(2,'0')}
+function iso(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`}
+function sameDay(a,b){return a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate()}
+function save(){localStorage.setItem('organized_calendar_events',JSON.stringify(events))}
+function render(){
+  const y=current.getFullYear(),m=current.getMonth();
+  document.getElementById('monthTitle').textContent=current.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const grid=document.getElementById('grid');grid.innerHTML='';
+  const first=new Date(y,m,1), start=first.getDay(), days=new Date(y,m+1,0).getDate();
+  const prevDays=new Date(y,m,0).getDate(), today=new Date(), q=document.getElementById('search').value.toLowerCase().trim();
+  for(let i=0;i<42;i++){
+    let n=i-start+1, yy=y, mm=m, muted=false;
+    if(n<1){n=prevDays+n;mm=m-1;muted=true} else if(n>days){n=n-days;mm=m+1;muted=true}
+    const d=new Date(yy,mm,n), key=iso(d.getFullYear(),d.getMonth(),d.getDate());
+    const cell=document.createElement('div');cell.className='day'+(muted?' muted':'')+(sameDay(d,today)?' today':'');
+    cell.onclick=(e)=>{if(e.target===cell||e.target.classList.contains('num'))openAdd(key)};
+    cell.innerHTML=`<div class="num">${n}</div>`;
+    events.filter(e=>e.date===key && (!q||e.name.toLowerCase().includes(q)||e.notes.toLowerCase().includes(q))).sort((a,b)=>(a.time||'').localeCompare(b.time||'')).slice(0,5).forEach(ev=>{
+      const el=document.createElement('div');el.className='event';el.style.background=colors[ev.category]||colors.personal;
+      el.textContent=(ev.time?ev.time+' ':'')+ev.name;el.title=ev.notes||ev.name;
+      el.onclick=(x)=>{x.stopPropagation();openEdit(ev.id)};cell.appendChild(el);
+    });
+    grid.appendChild(cell);
+  }
+}
+function prevMonth(){current.setMonth(current.getMonth()-1);render()}
+function nextMonth(){current.setMonth(current.getMonth()+1);render()}
+function jumpToday(){const d=new Date();current=new Date(d.getFullYear(),d.getMonth(),1);render()}
+function openAdd(date){
+  document.getElementById('modalTitle').textContent='New event';document.getElementById('editId').value='';
+  document.getElementById('name').value='';document.getElementById('date').value=date||iso(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+  document.getElementById('time').value='';document.getElementById('category').value='personal';document.getElementById('repeat').value='none';document.getElementById('notes').value='';
+  document.getElementById('deleteBtn').style.display='none';document.getElementById('modalBg').classList.add('show');setTimeout(()=>document.getElementById('name').focus(),50)
+}
+function openEdit(id){
+ const e=events.find(x=>x.id===id);if(!e)return;
+ document.getElementById('modalTitle').textContent='Edit event';document.getElementById('editId').value=e.id;
+ document.getElementById('name').value=e.name;document.getElementById('date').value=e.date;document.getElementById('time').value=e.time||'';
+ document.getElementById('category').value=e.category;document.getElementById('repeat').value=e.repeat||'none';document.getElementById('notes').value=e.notes||'';
+ document.getElementById('deleteBtn').style.display='block';document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+function saveEvent(){
+ const name=document.getElementById('name').value.trim(),date=document.getElementById('date').value;if(!name||!date){alert('Please enter an event name and date.');return}
+ const id=document.getElementById('editId').value, data={id:id||crypto.randomUUID(),name,date,time:document.getElementById('time').value,category:document.getElementById('category').value,repeat:document.getElementById('repeat').value,notes:document.getElementById('notes').value};
+ if(id){const i=events.findIndex(e=>e.id===id);events[i]=data}else events.push(data);
+ save();closeModal();render();
+}
+function removeEvent(){const id=document.getElementById('editId').value;if(confirm('Delete this event?')){events=events.filter(e=>e.id!==id);save();closeModal();render()}}
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(e.key==='n'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA')openAdd()});
+render();
+</script>
+</body>
+</html>
